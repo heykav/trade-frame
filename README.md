@@ -208,6 +208,33 @@ NOTE: During its infancy, the code used MFC (Microsoft Foundation Classes), some
 which I now no longer support.  The code remains in the repository for historical value, and for the time it might be
 re-written for current use.
 
+## Trade Conditions
+
+There is no static table of trade condition codes in this codebase, and there isn't meant to be one -
+IQFeed treats the code set as data, not a fixed spec, and trade-frame follows that design.
+
+A trade message's `CTradeConditions` field (see [Messages.h](lib/TFIQFeed/Messages.h)) carries the
+condition as a 2-digit hex value. Historical bar data carries the same thing as a hex string in
+`sTradeConditions` (see [HistoryQuery.h](lib/TFIQFeed/HistoryQuery.h)). Neither file says what a given
+code means - that mapping isn't fixed, and isn't shipped with IQFeed's client software either.
+
+IQFeed publishes the code-to-meaning mapping itself, over the same socket connection, as reference data
+rather than as documentation. [SymbolLookup](lib/TFIQFeed/SymbolLookup.h) requests it and parses the wire
+format IQFeed sends back (`TC,LS,<numeric id>,<short name>,<long name>,` - see the `TradeConditionParser`
+grammar in [SymbolLookup.cpp](lib/TFIQFeed/SymbolLookup.cpp)) into a `TradeCondition{ sShortName,
+sLongName }` per code, keyed by that numeric id.
+
+`IQFeed<T>::OnNetworkConnected()` (see [IQFeed.h](lib/TFIQFeed/IQFeed.h)) already triggers this lookup
+automatically on every connect - you'll see a line like `IQF Lookup Tables: ListedMarkets=N,
+SecurityTypes=N, TradeConditions=N` on stdout once it completes, confirming the table came down.
+Practically: connect, then consult whatever your IQFeed subscription returns, rather than a table in this
+repo - the set of codes and their names is defined by IQFeed's feed version, not by trade-frame.
+
+Current gap: `IQFeed<T>` populates `m_mapTradeCondition` on connect, but the member is private with no
+accessor (unlike `SymbolList`, which is exposed), so nothing outside `IQFeed<T>` can currently read the
+results back out to answer "what does code `1A` mean" at runtime. Exposing `m_mapTradeCondition` (or a
+lookup-by-id method) the same way `SymbolList` is exposed would close that gap.
+
 ## Testing
 
 * IQFeed testing: you can utilize the symbol TST$Y, this symbol sends a loop of data 24/7. (2019/03/12)
