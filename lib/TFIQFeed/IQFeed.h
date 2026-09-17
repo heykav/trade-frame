@@ -183,6 +183,12 @@ protected:
     return iter->second.sShortName;
   }
 
+  SymbolLookup::TradeCondition LookupTradeCondition( key_t nTradeCondition ) const {
+    SymbolLookup::mapTradeCondition_t::const_iterator iter = m_mapTradeCondition.find( nTradeCondition );
+    assert( m_mapTradeCondition.end() != iter );
+    return iter->second;
+  }
+
   // CRTP based dummy callbacks
   void OnIQFeedError( size_t ) {};
   void OnIQFeedConnected() {};

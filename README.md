@@ -230,10 +230,10 @@ SecurityTypes=N, TradeConditions=N` on stdout once it completes, confirming the 
 Practically: connect, then consult whatever your IQFeed subscription returns, rather than a table in this
 repo - the set of codes and their names is defined by IQFeed's feed version, not by trade-frame.
 
-Current gap: `IQFeed<T>` populates `m_mapTradeCondition` on connect, but the member is private with no
-accessor (unlike `SymbolList`, which is exposed), so nothing outside `IQFeed<T>` can currently read the
-results back out to answer "what does code `1A` mean" at runtime. Exposing `m_mapTradeCondition` (or a
-lookup-by-id method) the same way `SymbolList` is exposed would close that gap.
+To answer "what does code `1A` mean" at runtime, call `LookupTradeCondition(id)` on your `IQFeed<T>`
+instance (see [`IQFeed.h`](lib/TFIQFeed/IQFeed.h), alongside the equivalent `LookupSecurityType` and
+`LookupListedMarket`) once the connect-time lookup above has completed. It returns the
+`SymbolLookup::TradeCondition{ sShortName, sLongName }` IQFeed sent for that id.
 
 ## Testing
 
